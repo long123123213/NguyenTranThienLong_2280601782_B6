@@ -55,6 +55,31 @@ router.post('/logout', checkLogin, function (req, res, next) {
 })
 
 
+let userModel = require('../schemas/users')
+
+router.post('/change-password', checkLogin, async function (req, res, next) {
+  try {
+    let { oldpassword, newpassword } = req.body;
+    let user = await userModel.findById(req.userId);
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    let isMatch = bcrypt.compareSync(oldpassword, user.password);
+    if (!isMatch) {
+      return res.status(400).send({ message: "Old password is wrong" });
+    }
+
+    user.password = newpassword;
+    await user.save();
+
+    res.send({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+
 module.exports = router;
 
 
